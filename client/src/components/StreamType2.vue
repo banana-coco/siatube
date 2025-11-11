@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref, watch, onMounted, nextTick, onBeforeUnmount } from "vue";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 import { setupSyncPlayback } from "@/components/syncPlayback";
 
 const props = defineProps({
@@ -584,17 +584,13 @@ async function fetchStreamUrl(id) {
   loading.value = true;
   hasM3u8.value = false;
 
-  const jsonUrl = `${apiurl()}?&stream2=${id}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   try {
-    const res = await fetch(jsonUrl, { credentials: "omit", signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!res.ok) throw new Error("HTTP error");
-    const ct = res.headers.get("content-type") || "";
-    if (!ct.includes("application/json")) throw new Error("Not JSON");
-    const data = await res.json();
+    const data = await apiRequest({
+      params: { stream2: id },
+      retries: 1,
+      timeout: 30000,
+      jsonpFallback: false,
+    });
 
     // parse videourl and m3u8 into separate maps
     let srcs = {}; // progressive: { video: {url,mimeType}, audio: {...} }
@@ -739,7 +735,7 @@ async function fetchStreamUrl(id) {
 
   } catch (err) {
     loading.value = false;
-    if (err.name === 'AbortError') {
+    if (err && err.name === 'AbortError') {
       error.value = "ストリームURLの取得に失敗しました (タイムアウト)";
     } else {
       error.value = "ストリームURLの取得に失敗しました (fetch error)";

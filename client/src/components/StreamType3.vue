@@ -84,7 +84,8 @@
 
 <script setup>
 import { ref } from "vue";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
+import { apiurl } from "@/api"; // フォールバック用（getEffectiveApiUrl が壊れた場合）
 
 const props = defineProps({
   videoId: { type: String, required: true }
@@ -126,58 +127,74 @@ async function fetchStream() {
   error.value = "";
   streamData.value = null;
 
-  const jsonUrl = `https://script.google.com/macros/s/AKfycbwUuvKAcomprFysE2SFaZrPTHB6Rmhi0ptjQYHzWnoOGyIMA8gMKcOEW_Nz11u695Xv_Q/exec?id=${props.videoId}`;
-
   try {
-    const res = await fetch(jsonUrl, { credentials: "omit" });
-    if (!res.ok || !res.headers.get("content-type")?.includes("application/json")) {
-      throw new Error("Not JSON response");
-    }
-    const data = await res.json();
+    // 中央化された apiRequest を使用
+    const data = await apiRequest({
+      params: { id: props.videoId },
+      retries: 1,
+      timeout: 15000,
+      jsonpFallback: false,
+    });
+
+    // API から正しく JSON が来た場合
     streamData.value = data;
 
-    // muxed 360p
-    muxed360pList.value = [];
-    if (Array.isArray(data["audio&video"])) {
-      muxed360pList.value = data["audio&video"].filter(v => v.resolution === "360p").map(v => ({ url: v.url }));
-      if (muxed360pList.value.length === 0) {
-        muxed360pList.value = data["audio&video"].map(v => ({ url: v.url }));
+  } catch (e) {
+    // フォールバック: 既存の固定スクリプトURL に直接 fetch を試す（既存動作を壊さないため）
+    try {
+      const fallbackUrl = `https://script.google.com/macros/s/AKfycbwUuvKAcomprFysE2SFaZrPTHB6Rmhi0ptjQYHzWnoOGyIMA8gMKcOEW_Nz11u695Xv_Q/exec?id=${encodeURIComponent(props.videoId)}`;
+      const res = await fetch(fallbackUrl, { credentials: "omit" });
+      if (!res.ok || !res.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Not JSON response (fallback)");
+      }
+      const data2 = await res.json();
+      streamData.value = data2;
+    } catch (e2) {
+      error.value = "ストリームの取得に失敗しました（fetch error）";
+      streamData.value = null;
+      muxed360pList.value = [];
+      audioOnlyList.value = [];
+      videoOnlyList.value = [];
+      m3u8RawList.value = [];
+      m3u8ProxyList.value = [];
+    }
+  } finally {
+    // 共通の後処理（data がセットされていれば下でマップ処理）
+    if (streamData.value) {
+      const data = streamData.value;
+      // muxed 360p
+      muxed360pList.value = [];
+      if (Array.isArray(data["audio&video"])) {
+        muxed360pList.value = data["audio&video"].filter(v => v.resolution === "360p").map(v => ({ url: v.url }));
+        if (muxed360pList.value.length === 0) {
+          muxed360pList.value = data["audio&video"].map(v => ({ url: v.url }));
+        }
+      }
+
+      // audio only
+      audioOnlyList.value = [];
+      if (Array.isArray(data["audio only"])) {
+        audioOnlyList.value = data["audio only"].map(v => ({ ext: v.ext, url: v.url }));
+      }
+
+      // video only
+      videoOnlyList.value = [];
+      if (Array.isArray(data["video only"])) {
+        videoOnlyList.value = data["video only"].map(v => ({ resolution: v.resolution, ext: v.ext, url: v.url }));
+      }
+
+      // m3u8 raw
+      m3u8RawList.value = [];
+      if (Array.isArray(data["m3u8 raw"])) {
+        m3u8RawList.value = data["m3u8 raw"].map(v => ({ url: v.url, resolution: v.resolution }));
+      }
+
+      // m3u8 proxy
+      m3u8ProxyList.value = [];
+      if (Array.isArray(data["m3u8 proxy"])) {
+        m3u8ProxyList.value = data["m3u8 proxy"].map(v => ({ url: v.url, resolution: v.resolution }));
       }
     }
-
-    // audio only
-    audioOnlyList.value = [];
-    if (Array.isArray(data["audio only"])) {
-      audioOnlyList.value = data["audio only"].map(v => ({ ext: v.ext, url: v.url }));
-    }
-
-    // video only
-    videoOnlyList.value = [];
-    if (Array.isArray(data["video only"])) {
-      videoOnlyList.value = data["video only"].map(v => ({ resolution: v.resolution, ext: v.ext, url: v.url }));
-    }
-
-    // m3u8 raw
-    m3u8RawList.value = [];
-    if (Array.isArray(data["m3u8 raw"])) {
-      m3u8RawList.value = data["m3u8 raw"].map(v => ({ url: v.url, resolution: v.resolution }));
-    }
-
-    // m3u8 proxy
-    m3u8ProxyList.value = [];
-    if (Array.isArray(data["m3u8 proxy"])) {
-      m3u8ProxyList.value = data["m3u8 proxy"].map(v => ({ url: v.url, resolution: v.resolution }));
-    }
-
-  } catch (e) {
-    error.value = "ストリームの取得に失敗しました（fetch error）";
-    streamData.value = null;
-    muxed360pList.value = [];
-    audioOnlyList.value = [];
-    videoOnlyList.value = [];
-    m3u8RawList.value = [];
-    m3u8ProxyList.value = [];
-  } finally {
     loading.value = false;
   }
 }

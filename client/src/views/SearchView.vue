@@ -1,14 +1,28 @@
 <template>
   <div>
-    <div v-if="loading" class="loading">読み込み中...</div>
-    <div v-if="error" class="error">{{ error }}</div>
+    <!-- 通常読み込み中 -->
+    <div v-if="loading && !retrying" class="loading">読み込み中...</div>
 
+    <!-- エラー表示 -->
+    <div v-if="error" class="error">
+      {{ error }}
+      <button 
+        @click="retry" 
+        class="retry-btn" 
+        :disabled="retrying"
+      >
+        {{ retrying ? "再読み込み中…" : "再試行" }}
+      </button>
+    </div>
+
+    <!-- 成功時の動画リスト -->
     <VideoList
       v-if="!loading && !error && videos.length"
       :videos="videos"
       :title="`検索結果: ${query}`"
     />
 
+    <!-- 検索結果なし -->
     <div v-if="!loading && !error && videos.length === 0" class="no-results">
       検索結果が見つかりませんでした。
     </div>
@@ -17,7 +31,7 @@
 
 <script>
 import VideoList from "@/components/VideoList.vue";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
 export default {
   components: { VideoList },
@@ -32,6 +46,8 @@ export default {
       videos: [],
       loading: false,
       error: null,
+      lastQuery: "",
+      retrying: false,
     };
   },
   watch: {
@@ -39,8 +55,8 @@ export default {
       immediate: true,
       handler(newQuery) {
         document.title = newQuery ? `${newQuery} - 検索` : "検索結果";
-
         if (newQuery) {
+          this.lastQuery = newQuery;
           this.fetchSearchResults(newQuery);
         } else {
           this.videos = [];
@@ -50,54 +66,72 @@ export default {
   },
   methods: {
     async fetchSearchResults(q) {
-      this.loading = true;
+      // 通常の検索呼び出しか再試行かでフラグ設定
+      if (!this.retrying) this.loading = true;
       this.error = null;
 
-      const baseUrl = `${apiurl()}?q=${encodeURIComponent(q)}`;
-
       try {
-        // 指示通り fetch をこの形で呼ぶ
-        const res = await fetch(`${baseUrl}`);
-
-        if (!res.ok) {
-          this.error = `検索APIの取得に失敗しました (HTTP ${res.status})`;
-          this.videos = [];
-          return;
-        }
-
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-        if (!ct.includes("application/json") && !ct.includes("text/json")) {
-          this.error = "検索APIはJSONを返しませんでした";
-          this.videos = [];
-          return;
-        }
-
-        const data = await res.json();
+        const data = await apiRequest({
+          params: { q },
+          retries: 2,
+          timeout: 15000,
+          jsonpFallback: false,
+        });
         this.videos = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
       } catch (e) {
+        console.warn("fetchSearchResults error:", e);
         this.error = "検索APIの取得に失敗しました";
-        console.warn("fetch error:", e);
         this.videos = [];
       } finally {
         this.loading = false;
+        this.retrying = false;
       }
     },
-     },
+    retry() {
+      if (!this.lastQuery) return;
+      this.retrying = true;
+      this.fetchSearchResults(this.lastQuery);
+    },
+  },
 };
 </script>
 
 <style scoped>
-.loading {
-  padding: 1rem;
-  text-align: center;
+.loading { 
+  padding: 1rem; 
+  text-align: center; 
+  font-weight: bold;
 }
-.error {
-  color: red;
-  padding: 1rem;
+
+.error { 
+  color: red; 
+  padding: 1rem; 
+  text-align: center; 
 }
-.no-results {
-  padding: 1rem;
-  text-align: center;
-  color: #666;
+
+.retry-btn {
+  margin-left: 1rem;
+  padding: 0.3rem 0.8rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-btn:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.retry-btn:hover:not(:disabled) { 
+  background-color: #0056b3; 
+}
+
+.no-results { 
+  padding: 1rem; 
+  text-align: center; 
+  color: #666; 
 }
 </style>

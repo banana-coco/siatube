@@ -18,55 +18,92 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
 const props = defineProps({
   videoId: { type: String, required: true }
 });
-function reloadStream() {
-  fetchStream(props.videoId);
-}
 
 const streamUrl = ref("");
 const error = ref("");
 const loading = ref(false);
 
-function fetchStream(id) {
+// --- キャッシュ用 ---
+let cachedParams = null;
+let cachedAt = 0; // タイムスタンプ(ms)
+
+function reloadStream() {
+  fetchStream(props.videoId);
+}
+
+const sheetId = "1dily2wiik92TAyK3zyIsu8TDuyYNoF20IM1iMk_X-pg";
+const sheetName = "Youtube-education-parameter";
+const range = "A1";
+
+async function fetchParamsFromSheet() {
+  const now = Date.now();
+  // 1時間(3600000ms)以内ならキャッシュを使う
+  if (cachedParams && now - cachedAt < 3600000) {
+    return cachedParams;
+  }
+
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=${range}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const jsonStr = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/s)[1];
+    const data = JSON.parse(jsonStr);
+    const params = data.table.rows?.[0]?.c?.[0]?.v;
+    if (!params) throw new Error("スプレッドシートに値がありません");
+
+    // キャッシュ更新
+    cachedParams = params;
+    cachedAt = now;
+
+    return params;
+  } catch (err) {
+    console.warn("スプレッドシート取得失敗:", err);
+    return null; // 失敗したら null を返す
+  }
+}
+
+async function fetchStream(id) {
   streamUrl.value = "";
   error.value = "";
   loading.value = true;
 
-  const jsonUrl = `${apiurl()}?stream=${id}`;
+  let params = await fetchParamsFromSheet();
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 60000); // 60s timeout
-
-  fetch(jsonUrl, { credentials: "omit", signal: controller.signal })
-    .then(res => {
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error("HTTP error");
-      const ct = res.headers.get("content-type") || "";
-      if (!ct.includes("application/json")) throw new Error("Not JSON");
-      return res.json();
-    })
-    .then(data => {
-      loading.value = false;
+  // スプレッドシート取得できなかったら従来の apiRequest
+  if (!params) {
+    try {
+      const data = await apiRequest({
+        params: { stream: id },
+        retries: 1,
+        timeout: 60000,
+        jsonpFallback: false,
+      });
       if (data && data.url) {
         streamUrl.value = data.url;
       } else {
         error.value = "ストリームURLが空です (JSON)";
       }
-    })
-    .catch(err => {
-      loading.value = false;
-      if (err.name === "AbortError") {
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") {
         error.value = "ストリームURLの取得に失敗しました (タイムアウト)";
       } else {
         error.value = "ストリームURLの取得に失敗しました (fetch error)";
       }
-    });
+      return;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // スプレッドシートから params が取れた場合
+  streamUrl.value = `https://www.youtubeeducation.com/embed/${id}${params}`;
+  loading.value = false;
 }
 
 watch(

@@ -68,7 +68,7 @@
 <script setup>
 import { ref, onMounted, nextTick, computed } from "vue";
 import { useRoute } from "vue-router";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
 const props = defineProps({
   playlistId: String,
@@ -103,97 +103,34 @@ onMounted(async () => {
   error.value = false;
 
   try {
-    const jsonUrl = `${apiurl()}?playlist=${playlistId.value}`;
-    let fetched = false;
-    try {
-      const res = await fetch(jsonUrl, { credentials: "omit" });
-      if (res.ok && res.headers.get("content-type")?.includes("application/json")) {
-        const data = await res.json();
-        playlist.value = data;
-        fetched = true;
+    // 中央管理された apiRequest を使用（JSONP フォールバックを許可）
+    const data = await apiRequest({
+      params: { playlist: playlistId.value },
+      retries: 1,
+      timeout: 30000,
+      jsonpFallback: true,
+    });
 
-        if (displayType.value !== "watch" && displayType.value !== "channel" && playlist.value?.title) {
-          document.title = `${playlist.value.title} - プレイリスト`;
-        }
+    playlist.value = data;
 
-        await nextTick();
-        // 中央にスクロール
-        if (playVideoId.value && scrollContainer.value) {
-          const containerEl = scrollContainer.value;
-          const target = containerEl.querySelector(`.playlist-item[data-video-id="${playVideoId.value}"]`);
-          if (target) {
-            const containerRect = containerEl.getBoundingClientRect();
-            const targetRect = target.getBoundingClientRect();
-            const relativeTop = targetRect.top - containerRect.top;
-            const scrollOffset =
-              containerEl.scrollTop + relativeTop - containerEl.clientHeight / 2 + target.clientHeight / 2;
-            containerEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
-          }
-        }
-      }
-    } catch (e) {
+    if (displayType.value !== "watch" && displayType.value !== "channel" && playlist.value?.title) {
+      document.title = `${playlist.value.title} - プレイリスト`;
     }
 
-    if (fetched) return;
-
-    const cbName = 'jsonp_playlist_' + Math.random().toString(36).slice(2, 10);
-    let timeoutId;
-    const script = document.createElement('script');
-
-    window[cbName] = (data) => {
-      clearTimeout(timeoutId);
-      try {
-        playlist.value = data;
-        console.log("取得プレイリスト:", playlist.value);
-        console.log("表示タイプ:", displayType.value);
-
-        if (displayType.value !== "watch" && displayType.value !== "channel" && playlist.value?.title) {
-          document.title = `${playlist.value.title} - プレイリスト`;
-        }
-      } catch (e) {
-        console.error('プレイリスト解析エラー:', e);
-        error.value = true;
+    await nextTick();
+    // 中央にスクロール
+    if (playVideoId.value && scrollContainer.value) {
+      const containerEl = scrollContainer.value;
+      const target = containerEl.querySelector(`.playlist-item[data-video-id="${playVideoId.value}"]`);
+      if (target) {
+        const containerRect = containerEl.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const relativeTop = targetRect.top - containerRect.top;
+        const scrollOffset =
+          containerEl.scrollTop + relativeTop - containerEl.clientHeight / 2 + target.clientHeight / 2;
+        containerEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
       }
-
-      nextTick().then(() => {
-        // 中央にスクロール
-        if (playVideoId.value && scrollContainer.value) {
-          const containerEl = scrollContainer.value;
-          const target = containerEl.querySelector(`.playlist-item[data-video-id="${playVideoId.value}"]`);
-          if (target) {
-            const containerRect = containerEl.getBoundingClientRect();
-            const targetRect = target.getBoundingClientRect();
-
-            const relativeTop = targetRect.top - containerRect.top;
-            const scrollOffset =
-              containerEl.scrollTop + relativeTop - containerEl.clientHeight / 2 + target.clientHeight / 2;
-
-            containerEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
-          }
-        }
-      }).finally(cleanup);
-    };
-
-    function cleanup() {
-      try { if (script.parentNode) script.parentNode.removeChild(script); } catch (e) {}
-      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
     }
-
-    script.src = `${jsonUrl}&callback=${cbName}`;
-    script.onerror = () => {
-      clearTimeout(timeoutId);
-      console.error('プレイリスト取得失敗 (script error)');
-      error.value = true;
-      cleanup();
-    };
-
-    timeoutId = setTimeout(() => {
-      console.error('プレイリスト取得タイムアウト');
-      error.value = true;
-      cleanup();
-    }, 30000); // 30秒タイムアウト
-
-    document.body.appendChild(script);
   } catch (err) {
     console.error("プレイリスト取得失敗:", err);
     error.value = true;

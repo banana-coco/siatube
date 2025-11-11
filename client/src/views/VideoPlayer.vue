@@ -152,7 +152,7 @@
       ⚠️ {{ error }}<br>
       <button class="reload-btn" @click="reloadVideo">再取得</button>
     </div>
-    <p v-else class="loading-msg">読み込み中...</p>
+    <p v-else class="loading-msg">読み込み中...<br>読み込む速度を早くする方法。↓<br>右上の設定マークからカスタムエンドポイントのを追加してください　＊方法は簡単で1~3分で作れます。</p>
   </div>
 </template>
 
@@ -177,7 +177,7 @@ function switchStream() {
 </script>
 
 <script>
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
 export default {
   props: {
@@ -320,41 +320,30 @@ export default {
         return;
       }
 
-      const baseUrl = `${apiurl()}?video=${encodeURIComponent(id)}`;
+      try {
+        this.video = null;
+        this.error = null;
+        // requestManager の apiRequest を使って中央集約されたリクエストを実行
+        const data = await apiRequest({
+          params: { video: id },
+          method: "GET",
+          retries: maxRetries,
+          timeout: 15000,
+        });
 
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          this.video = null;
-          this.error = null;
-
-          const res = await fetch(`${baseUrl}`);
-
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
-          }
-
-          const ct = (res.headers.get("content-type") || "").toLowerCase();
-          if (!ct.includes("application/json") && !ct.includes("text/json")) {
-            this.error = "動画APIはJSONを返しませんでした";
-            this.video = null;
-            return;
-          }
-
-          const data = await res.json();
-          this.video = data;
-          // 関連動画がない場合はエラーをセット
-          if (!Array.isArray(data.related) || data.related.length === 0) {
-            this.error = "関連動画が見つかりませんでした。";
-          }
-          return;
-        } catch (err) {
-          console.error(`fetchVideoData 取得失敗 (試行 ${attempt}/${maxRetries}):`, err);
-          if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 500));
-            continue;
-          }
-          this.error = "動画情報を取得できませんでした。";
+        this.video = data;
+        if (!Array.isArray(data.related) || data.related.length === 0) {
+          this.error = "関連動画が見つかりませんでした。";
         }
+        return;
+      } catch (err) {
+        console.error("fetchVideoData error:", err);
+        this.video = null;
+        // エラーメッセージは既存の UI 用文字列を使う
+        this.error =
+          err && err.message && err.message !== ""
+            ? err.message
+            : "動画情報を取得できませんでした。";
       }
     },
     reloadVideo() {

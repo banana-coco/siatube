@@ -1,4 +1,5 @@
-// APIエンドポイント、全部アカウント変えて作ってる
+// APIエンドポイント（一覧）とランダムに1つ返す関数のみ
+
 const API_URLS = [
   "https://script.google.com/macros/s/AKfycbzqpav7y2x3q756wRSOhBzaXf-2hKaLTvxoFN8kFegrIvamH03ZXphEw2PK30L7AstC/exec",
   "https://script.google.com/macros/s/AKfycbyXCS6JsBglbqlW0eIOWpVscTdNA8QUISRaGMJUAiMlYfp4Ju-Avkw1ai3A6P_ek-FK/exec",
@@ -19,3 +20,8 @@ export function apiurl() {
   const index = Math.floor(Math.random() * API_URLS.length);
   return API_URLS[index];
 }
+
+export { API_URLS };
+
+export const STORAGE_KEY = "custom_api_endpoints_v1";
+export const MODE_KEY = "api_mode_v1";

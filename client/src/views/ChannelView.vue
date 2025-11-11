@@ -161,7 +161,7 @@
     </div>
   </section>
   <section v-else-if="loadingChannel" class="loading">
-    読み込み中...
+    読み込み中...<br>読み込む速度を早くする方法。↓<br>右上の設定マークからカスタムエンドポイントのを追加してください　＊方法は簡単で1~3分で作れます。
   </section>
   <section v-else class="error-section">
     <div class="skeleton" style="width: 100%; height: 180px; margin-bottom: 24px;"></div>
@@ -186,106 +186,93 @@
         @click="tab = 'videos'"
         @keydown.enter.space.prevent="tab = 'videos'"
       >
-        <span v-if="!loadingChannel">動画セクションに移動<img src="/Image/linkicon.png" width="21" height="21"></span>
+        <span v-if="!loadingChannel">動画セクションに移動<img :src="settingIcon" width="21" height="21"></span>
         <span v-else class="skeleton skeleton-text" style="width: 120px; height: 1.3em;"></span>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import settingIcon from '/Image/linkicon.txt?raw'
 import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import VideoList from "@/components/Playlist.vue";
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
-export default {
-  components: { VideoList },
-  setup() {
-    const route = useRoute();
-    const channel = ref(null);
-    const tab = ref("home");
-    const loadingChannel = ref(false);
+// ルートパラメータ
+const route = useRoute();
 
-    const defaultAvatar = "/default-avatar.png";
-    const defaultBanner = "/default-banner.png";
+// 状態
+const channel = ref(null);
+const tab = ref("home");
+const loadingChannel = ref(false);
 
-    function getPrimaryThumbnail(id) {
-      return `https://i.ytimg.com/vi/${id}/sddefault.jpg`;
-    }
+// デフォルト画像
+const defaultAvatar = "/default-avatar.png";
+const defaultBanner = "/default-banner.png";
 
-    function onImageError(event, id) {
-      if (!event.target.dataset.error) {
-        event.target.src = `https://i.ytimg.com/vi/${id}/sddefault.jpg`;
-        event.target.dataset.error = true;
-      }
-    }
+// 関数
+function getPrimaryThumbnail(id) {
+  return `https://i.ytimg.com/vi/${id}/sddefault.jpg`;
+}
 
-    function fetchChannelInfo(channelId) {
-      loadingChannel.value = true;
+function onImageError(event, id) {
+  if (!event.target.dataset.error) {
+    event.target.src = `https://i.ytimg.com/vi/${id}/sddefault.jpg`;
+    event.target.dataset.error = true;
+  }
+}
+
+function fetchChannelInfo(channelId) {
+  loadingChannel.value = true;
+  channel.value = null;
+  apiRequest({
+    params: { channel: channelId },
+    method: "GET",
+    retries: 2,
+    timeout: 15000,
+  })
+    .then((data) => {
+      channel.value = data;
+    })
+    .catch((err) => {
+      console.error("チャンネル情報取得失敗:", err);
       channel.value = null;
-      const jsonUrl = `${apiurl()}?channel=${channelId}`;
-      fetch(jsonUrl, { credentials: "omit" })
-        .then(res => {
-          if (res.ok && res.headers.get("content-type")?.includes("application/json")) {
-            return res.json();
-          }
-          throw new Error("JSONレスポンスではありません");
-        })
-        .then(data => {
-          channel.value = data;
-        })
-        .catch((err) => {
-          console.error('チャンネル情報取得失敗:', err);
-          channel.value = null;
-        })
-        .finally(() => {
-          loadingChannel.value = false;
-        });
-    }
-
-    function reloadChannel() {
-      fetchChannelInfo(route.params.id);
-    }
-
-    onMounted(() => {
-      fetchChannelInfo(route.params.id);
+    })
+    .finally(() => {
+      loadingChannel.value = false;
     });
+}
 
-    watch(
-      () => route.params.id,
-      (newId, oldId) => {
-        if (newId !== oldId) {
-          fetchChannelInfo(newId);
-          window.scrollTo(0, 0);
-        }
-      }
-    );
+function reloadChannel() {
+  fetchChannelInfo(route.params.id);
+}
 
-    watch(
-      () => channel.value,
-      (newChannel) => {
-        if (newChannel && newChannel.title) {
-          document.title = `${newChannel.title}`;
-        } else {
-          document.title = "読み込み中…";
-        }
-      },
-      { immediate: true }
-    );
+// 初回取得
+onMounted(() => {
+  fetchChannelInfo(route.params.id);
+});
 
-    return {
-      channel,
-      tab,
-      defaultAvatar,
-      defaultBanner,
-      getPrimaryThumbnail,
-      onImageError,
-      loadingChannel,
-      reloadChannel,
-    };
+// ルートID変更時
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId !== oldId) {
+      fetchChannelInfo(newId);
+      window.scrollTo(0, 0);
+    }
+  }
+);
+
+// channel変更時にタイトル更新
+watch(
+  () => channel.value,
+  (newChannel) => {
+    document.title = newChannel?.title || "読み込み中…";
   },
-};
+  { immediate: true }
+);
 </script>
 
 <style scoped>

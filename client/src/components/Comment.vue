@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { apiurl } from "@/api";
+import { apiRequest } from "@/services/requestManager";
 
 export default {
   name: "Comment",
@@ -100,88 +100,37 @@ export default {
       this.totalCommentCount = null;
       this.loading = true;
 
-      const jsonUrl = `${apiurl()}?comments=${this.videoId}`;
-      let fetched = false;
-
       try {
-        const res = await fetch(jsonUrl, { credentials: "omit" });
-        if (res.ok && res.headers.get("content-type")?.includes("application/json")) {
-          const data = await res.json();
-          this.totalCommentCount = data.totalCommentCount ?? null;
-          if (Array.isArray(data.comments)) {
-            this.comments = data.comments.map((c, index) => ({
-              id: c.id || index,
-              author: c.author || '匿名',
-              authorIcon: c.authorIcon || null,
-              text: c.text || '',
-              date: c.date || '',
-              likes: c.likes ?? 0,
-              isExpanded: false,
-              isClamped: false,
-            }));
-          } else {
-            this.comments = [];
-          }
-          this.loading = false;
-          fetched = true;
+        const data = await apiRequest({
+          params: { comments: this.videoId },
+          retries: 1,
+          timeout: 15000,
+          jsonpFallback: true,
+        });
+
+        this.totalCommentCount = data?.totalCommentCount ?? null;
+
+        if (Array.isArray(data?.comments)) {
+          this.comments = data.comments.map((c, index) => ({
+            id: c.id || index,
+            author: c.author || "匿名",
+            authorIcon: c.authorIcon || null,
+            text: c.text || "",
+            date: c.date || "",
+            likes: c.likes ?? 0,
+            isExpanded: false,
+            isClamped: false,
+          }));
+        } else {
+          this.comments = [];
         }
       } catch (e) {
+        console.warn("fetchComments error:", e);
+        this.error = "コメントの取得に失敗しました";
+        this.comments = [];
+      } finally {
+        this.loading = false;
       }
-
-      if (fetched) return;
-
-      const cbName = 'jsonp_comments_' + Math.random().toString(36).slice(2, 10);
-      let timeoutId;
-
-      window[cbName] = (data) => {
-        clearTimeout(timeoutId);
-        try {
-          this.totalCommentCount = data.totalCommentCount ?? null;
-          if (Array.isArray(data.comments)) {
-            this.comments = data.comments.map((c, index) => ({
-              id: c.id || index,
-              author: c.author || '匿名',
-              authorIcon: c.authorIcon || null,
-              text: c.text || '',
-              date: c.date || '',
-              likes: c.likes ?? 0,
-              isExpanded: false,
-              isClamped: false,
-            }));
-          } else {
-            this.comments = [];
-          }
-        } catch (e) {
-          console.error('コメント解析エラー:', e);
-          this.error = 'コメントを解析できませんでした。';
-        }
-        this.loading = false;
-        cleanup();
-      };
-
-      const script = document.createElement('script');
-      script.src = `${jsonUrl}&callback=${cbName}`;
-      script.onerror = () => {
-        clearTimeout(timeoutId);
-        this.loading = false;
-        this.error = 'コメントの取得に失敗しました (script error)';
-        cleanup();
-      };
-
-      function cleanup() {
-        try {
-          if (script.parentNode) script.parentNode.removeChild(script);
-        } catch (e) {}
-        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
-      }
-
-      timeoutId = setTimeout(() => {
-        this.loading = false;
-        this.error = 'コメントの取得に失敗しました (タイムアウト)';
-        cleanup();
-      }, 30000);
-
-      document.body.appendChild(script);
     },
 
     checkCommentsHeight() {
