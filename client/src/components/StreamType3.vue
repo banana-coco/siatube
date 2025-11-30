@@ -217,8 +217,8 @@ async function copyUrl(url) {
 }
 .download-main-btn {
   padding: 8px 16px;
-  background: #85848485;
-  color: #191919;
+  background: var(--border-color);
+  color: var(--text-primary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -235,7 +235,7 @@ async function copyUrl(url) {
 }
 
 .popup {
-  background: white;
+  background: var(--bg-primary);
   padding: 20px;
   border-radius: 8px;
   width: 420px;
@@ -250,8 +250,9 @@ async function copyUrl(url) {
   top: 10px;
   border: none;
   background: none;
-  font-size: 18px;
+  font-size: 28px;
   cursor: pointer;
+  color: var(--close-btn-color);
 }
 
 .option {
@@ -266,15 +267,15 @@ async function copyUrl(url) {
 .retry-btn {
   margin-top: 8px;
   padding: 6px 12px;
-  background: #444;
-  color: white;
+  background: var(--text-primary);
+  color: var(--on-accent);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
 }
 .retry-btn:hover {
-  background: #666;
+  background: var(--text-secondary);
 }
 
 /* m3u8 表示のスタイル */
@@ -286,7 +287,7 @@ async function copyUrl(url) {
 }
 .meta {
   font-size: 12px;
-  color: #444;
+  color: var(--text-primary);
 }
 
 /* m3u8のURL */
@@ -307,9 +308,9 @@ async function copyUrl(url) {
   max-width: 100%;
   font-family: monospace;
   font-size: 12px;
-  color: #0066cc;
+  color: var(--accent-color);
   text-decoration: underline;
-  background: #f6f6f6;
+  background: var(--bg-secondary);
   padding: 6px;
   border-radius: 4px;
 }
@@ -317,7 +318,7 @@ async function copyUrl(url) {
 /* コピー済み表示 */
 .copied {
   font-size: 12px;
-  color: #2a8a2a;
+  color: var(--success);
   margin-top: 4px;
 }
 </style>

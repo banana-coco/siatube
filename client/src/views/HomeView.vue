@@ -96,46 +96,60 @@ export default {
 <style scoped>
 .Accesscount {
   font-size: 1rem;
+  color: var(--text-primary);
 }
 .category-nav {
   display: flex;
   gap: 1rem;
   padding: 1rem;
   justify-content: center;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 .category-nav button {
   padding: 0.5rem 1rem;
   border: none;
-  background: #eee;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   border-radius: 4px;
   font-weight: bold;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.category-nav button:hover {
+  background-color: var(--hover-bg);
 }
 .category-nav button.active {
-  background-color: #007bff;
+  background-color: #ff0033;
   color: white;
 }
 .error {
-  color: red;
+  color: #ff6666;
   padding: 1rem;
 }
 .loading {
   padding: 1rem;
   text-align: center;
+  color: var(--text-primary);
 }
 main {
   padding: 1rem;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 .footer {
   margin-top: 2rem;
   padding: 1rem;
   text-align: center;
   font-size: 0.9rem;
-  color: #2a2a2aff;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .footer a {
-  color: #0077cc;
+  color: #ff0033;
   text-decoration: none;
   margin: 0 0.5rem;
 }

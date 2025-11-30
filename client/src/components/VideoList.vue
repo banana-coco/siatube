@@ -197,7 +197,7 @@ body {
 }
 
 .title-link{
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .video-list {
@@ -210,24 +210,24 @@ body {
 }
 
 .video-item {
-  background: #fff;
+  background: var(--bg-primary);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   max-width: 450px;
 }
 
 .video-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 .thumbnail-wrapper {
   position: relative;
   width: 100%;
   padding-top: 56.25%; /* 16:9 */
-  background-color: #f0f0f0;
+  background-color: var(--bg-secondary);
 }
 
 .thumbnail-wrapper img {
@@ -267,7 +267,7 @@ body {
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
 }
 
 .info {
@@ -278,7 +278,7 @@ body {
   font-size: 1.2rem;
   margin: 0 0 0.5rem;
   line-height: 1.4;
-  color: #222;
+  color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
@@ -289,20 +289,20 @@ body {
 
 .info h3 a,
 .channel-info a {
-  color: #000;
+  color: var(--text-primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .info h3 a:hover,
 .channel-info a:hover {
-  color: #444;
+  color: #ff0033;
   text-decoration: underline;
 }
 
 .info p {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--text-secondary);
   margin: 0.3rem 0;
   line-height: 1.4;
 }
@@ -313,7 +313,7 @@ body {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.3rem;
-  color: #000;
+  color: var(--text-primary);
 }
 
 .channel-icon {
@@ -325,7 +325,7 @@ body {
 
 .subscriber-count {
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin-top: 0.4rem;
 }
 

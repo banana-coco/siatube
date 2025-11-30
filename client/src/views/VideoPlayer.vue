@@ -605,23 +605,25 @@ export default {
   top: 100%;
   left: 0;
   margin-top: 0.25rem;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   min-width: 100%;
   white-space: nowrap;
   max-width: max-content;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .custom-dropdown-item {
   padding: 0.5rem 1rem;
   cursor: pointer;
+  color: var(--text-primary);
 }
 
 .custom-dropdown-item:hover {
-  background-color: #eee;
+  background-color: var(--hover-bg);
 }
 
 .one-line {
@@ -675,7 +677,7 @@ p {
 .channel-name {
   font-weight: 500;
   font-size: 1.1rem;
-  color: #030303;
+  color: var(--text-primary);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
@@ -689,20 +691,20 @@ p {
 
 .subscriber-count {
   font-size: 0.85rem;
-  color: #606060;
+  color: var(--text-secondary);
   margin: 2px 0 0 0;
   white-space: nowrap;
 }
 .video-info p {
   font-size: 0.8rem;
-  color: #606060;
+  color: var(--text-secondary);
   margin: 0 0 4px 0;
   line-height: 1.4;
   font-weight: 400;
 }
 .video-description {
   font-size: 0.9rem;
-  color: #030303;
+  color: var(--text-primary);
   line-height: 1.5;
   margin-top: 12px;
   margin-bottom: 15px;
@@ -719,7 +721,7 @@ p {
 }
 .description-toggle {
   display: inline-block;
-  color: #065fd4; /* YouTube青リンク色 */
+  color: #ff0033;
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
@@ -747,12 +749,12 @@ p {
   font-weight: 600;
   margin: 8px 0;
   line-height: 1.4;
-  color: #030303;
+  color: var(--text-primary);
 }
 
 .video-meta {
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 16px;
 }
 

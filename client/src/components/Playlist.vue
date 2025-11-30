@@ -153,18 +153,21 @@ function onImageError(event, id) {
 
 <style scoped>
 .playlist-item.active {
-  background-color: #DDEBE7F2;
+  background-color: rgba(221, 235, 231, 0.95);
 }
 
 .playlist-section {
   max-width: 100%;
   margin: 0 auto;
   padding: 0.9rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .type-watch {
   background-color: transparent;
-  border: 1px solid #ccc; 
+  border: 1px solid var(--border-color); 
   border-radius: 8px;
   padding: 0.9rem;
   max-width: 360px;
@@ -174,11 +177,12 @@ function onImageError(event, id) {
   font-size: 1.4rem;
   margin-bottom: 0.2rem;
   margin-block-start:0.3em;
+  color: var(--text-primary);
 }
 
 .playlist-meta {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -221,7 +225,8 @@ function onImageError(event, id) {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 0.5rem;
-  margin-block: 10px; 
+  margin-block: 10px;
+  background-color: var(--bg-secondary);
 }
 
 .thumbnail-wrapper.small-thumb {
@@ -261,11 +266,12 @@ function onImageError(event, id) {
   text-overflow: ellipsis;
   white-space: normal;
   margin-left: 2px;
+  color: var(--text-primary);
 }
 
 .author {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-secondary);
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -294,7 +300,7 @@ function onImageError(event, id) {
 }
 
 .error-message {
-  color: red;
+  color: #ff6666;
   padding: 1rem;
   text-align: center;
 }

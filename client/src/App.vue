@@ -1,5 +1,5 @@
 <template>
-    <HeaderSearch @search="onSearch" />
+    <HeaderSearch @search="onSearch" @toggle-dark-mode="toggleDarkMode" />
     <router-view />
 </template>
 
@@ -16,7 +16,18 @@ export default {
       if (!keyword || !keyword.trim()) return;
       this.$router?.push({ path: '/search', query: { q: keyword.trim() } });
     },
+    toggleDarkMode() {
+      const isDarkMode = document.documentElement.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', isDarkMode);
+    }
   },
+  mounted() {
+    // ページ読み込み時にダークモード状態を復元
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+    }
+  }
 };
 </script>
 

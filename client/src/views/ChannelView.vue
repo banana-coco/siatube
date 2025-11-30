@@ -324,7 +324,7 @@ watch(
 .playlist-video-link-to {
   font-size: 16px;
   font-weight: normal;
-  color: #333333;
+  color: var(--text-primary);
   text-decoration: none;
   position: relative;
   cursor: pointer;
@@ -338,7 +338,7 @@ watch(
 
 .playlist-video-link-to:hover {
   text-decoration: underline;
-  text-decoration-color: #222;
+  text-decoration-color: var(--text-primary);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px; 
 }
@@ -353,16 +353,17 @@ watch(
 .playlist-item {
   width: 210px;
   flex-shrink: 0;
-  background: #ffffff;
+  background: var(--bg-primary);
   border-radius: 8px;
-  box-shadow: 0 0 6px rgb(0 0 0 / 0.05);
-  transition: box-shadow 0.2s;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s, background-color 0.3s ease;
   padding: 8px;
   overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .playlist-item:hover {
-  box-shadow: 0 0 12px rgb(0 0 0 / 0.1);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
 }
 
 .playlist-item .video-link {
@@ -385,7 +386,7 @@ watch(
   width: 100%;
   height: 118px;
   object-fit: cover;
-  background-color: #ccc;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
 }
 
@@ -410,17 +411,18 @@ watch(
   text-overflow: ellipsis;
   width: 100%;
   display: block;
+  color: var(--text-primary);
 }
 
 .playlist-item .author {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
 .playlist-item .meta {
   font-size: 0.79rem;
-  color: #555;
+  color: var(--text-secondary);
   margin-top: 0px;
 }
 
@@ -430,6 +432,9 @@ watch(
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .banner {
@@ -439,7 +444,7 @@ watch(
   background-position: center;
   border-radius: 8px;
   margin-bottom: 1rem;
-  background-color: #ddd;
+  background-color: var(--bg-secondary);
 }
 
 .channel-header {

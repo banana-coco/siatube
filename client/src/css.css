@@ -1,6 +1,27 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --border-color: #cccccc;
+  --hover-bg: #f0f0f0;
+}
+
+html.dark-mode {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2a2a2a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --border-color: #444444;
+  --hover-bg: #333333;
+}
+
 body {
   font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN",
                "メイリオ", Meiryo,
                "ＭＳ ゴシック", "MS Gothic",
                sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
