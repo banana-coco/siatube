@@ -138,7 +138,7 @@ main {
   transition: background-color 0.3s ease;
 }
 .footer {
-  margin-top: 2rem;
+  margin-top: 0px;
   padding: 1rem;
   text-align: center;
   font-size: 0.9rem;
