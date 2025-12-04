@@ -186,6 +186,7 @@ function switchStream() {
 
 <script>
 import { apiRequest } from "@/services/requestManager";
+import { addVideoToHistory } from "@/utils/historyManager";
 
 export default {
   props: {
@@ -483,6 +484,21 @@ export default {
         });
 
         this.video = data;
+        
+        // 履歴に保存（非同期で実行、エラーは無視）
+        try {
+          await addVideoToHistory({
+            id: data.id,
+            title: data.title,
+            views: data.views,
+            author: data.author,
+            description: data.description,
+            thumbnail: data.thumbnail,
+          });
+        } catch (historyError) {
+          console.warn('Failed to save to history:', historyError);
+        }
+        
         if (!Array.isArray(data.related) || data.related.length === 0) {
           this.error = "関連動画が見つかりませんでした。";
         }

@@ -148,9 +148,6 @@ onMounted(() => {
   };
   window.addEventListener('resize', handleResize);
 
-  // 初期状態の設定
-  initializeSidebarState();
-
   // Load custom endpoints
   try {
     customEndpoints.value = rmLoadCustomEndpoints() || [];
