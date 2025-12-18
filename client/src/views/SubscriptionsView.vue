@@ -1,6 +1,6 @@
 <template>
   <div class="subscriptions-container">
-    <h1>登録チャンネル</h1>
+    <h1 style="margin-block-start: 5px; margin-block-end: 8px;">登録チャンネル</h1>
 
     <div class="subs-topbar">
       <div
@@ -105,11 +105,12 @@ onUnmounted(() => {
 }
 
 .subs-topbar {
+  padding-top: 3px;
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 12px;
-  margin-bottom: 18px;
+  padding-bottom: 3px;
+  margin-bottom: 0px;
 }
 
 .subs-item {

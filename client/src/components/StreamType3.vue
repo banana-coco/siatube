@@ -50,7 +50,7 @@
 
             <!-- m3u8 proxy -->
             <div class="option" v-if="m3u8ProxyList.length">
-              <strong>m3u8（proxy）<span style="font-weight: normal;">*外部サイト(m3u8ダウンロードサイトで検索)との併用でダウンロード可能:</span></strong>
+              <strong>m3u8（proxy）<span style="font-weight: normal;">*外部サイト(<a href="https://m3u8.dev">https://m3u8.dev</a>)との併用でダウンロード可能 *制限がない環境:</span></strong>
               <div v-for="u in m3u8ProxyList" :key="u.url" class="m3u8-row">
                 <div class="meta">
                   {{ u.resolution || "-" }}
@@ -239,7 +239,7 @@ async function copyUrl(url) {
   background: var(--bg-primary);
   padding: 20px;
   border-radius: 8px;
-  width: 420px;
+  width: 520px;
   position: relative;
   max-height: 80vh;
   overflow-y: auto;

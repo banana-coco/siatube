@@ -177,6 +177,7 @@ export default {
 }
 
 .comments-section {
+  margin-block-end: 20px;
   padding: 16px;
   border-radius: 8px;
   margin-top: -10px;

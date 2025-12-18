@@ -329,6 +329,14 @@ const addEndpoint = () => {
   customEndpoints.value.push(v);
   newEndpoint.value = "";
   rmSaveCustomEndpoints(customEndpoints.value);
+
+  // Automatically switch API mode to "custom" when a custom endpoint is added
+  try {
+    mode.value = 'custom';
+    rmSaveMode('custom');
+  } catch (e) {
+    console.warn('[SettingsView.vue] Failed to persist api mode change to custom', e);
+  }
 };
 
 const removeEndpoint = (index) => {
