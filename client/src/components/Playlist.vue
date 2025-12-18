@@ -150,13 +150,24 @@ onMounted(async () => {
   loading.value = true;
 
   try {
-    const raw = route.query.v ? `playlist=${playlistId.value}==p==v==i==${route.query.v}` : `playlist=${playlistId.value}`;
-    const data = await apiRequest({
-      params: { __rawQuery: raw },
-      retries: 1,
-      timeout: 30000,
-      jsonpFallback: true,
-    });
+    // If this is a local playlist (stored in localStorage), call apiRequest with
+    // `params.playlist` so requestManager's local-playlist shortcut runs.
+    let data;
+    if (playlistId.value && playlistId.value.startsWith("local-")) {
+      data = await apiRequest({
+        params: { playlist: playlistId.value },
+        retries: 1,
+        timeout: 30000,
+      });
+    } else {
+      const raw = route.query.v ? `playlist=${playlistId.value}==p==v==i==${route.query.v}` : `playlist=${playlistId.value}`;
+      data = await apiRequest({
+        params: { __rawQuery: raw },
+        retries: 1,
+        timeout: 30000,
+        jsonpFallback: true,
+      });
+    }
 
     playlist.value = data;
 
