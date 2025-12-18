@@ -101,6 +101,14 @@
             />
             カスタムエンドポイントはJSONPのみを使用（fetchへフォールバックしない）
           </label>
+          <label>
+            <input
+              type="checkbox"
+              :checked="disableTimeouts"
+              @change="handleDisableTimeoutsChange($event.target.checked)"
+            />
+            タイムアウトを無くす（全てのリクエストでタイムアウトを無効化）
+          </label>
         </section>
       </div>
 
@@ -150,6 +158,7 @@ const shortVideoFilterEnabled = ref(false);
 const shortVideoFilterMinutes = ref(4);
 const displayMode = ref('device');
 const jsonpOnlyForCustom = ref(true);
+const disableTimeouts = ref(true);
 
 // Backup state (for cancel functionality)
 const backupState = ref({});
@@ -262,6 +271,12 @@ const loadSettings = () => {
   } catch (e) {
     jsonpOnlyForCustom.value = true;
   }
+  // タイムアウト無効化設定を読み込み
+  try {
+    disableTimeouts.value = loadDisableTimeouts();
+  } catch (e) {
+    disableTimeouts.value = true;
+  }
 };
 
 const saveBackup = () => {
@@ -343,6 +358,15 @@ const handleJsonpOnlyChange = (enabled) => {
   }
 };
 
+const handleDisableTimeoutsChange = (enabled) => {
+  disableTimeouts.value = !!enabled;
+  try {
+    saveDisableTimeouts(!!enabled);
+  } catch (e) {
+    console.warn('[SettingsView.vue] Failed to persist disableTimeouts', e);
+  }
+};
+
 const handleNewEndpointChange = (value) => {
   newEndpoint.value = value;
 };
@@ -387,6 +411,7 @@ const saveToLocalStorage = () => {
       shortVideoFilterEnabled: shortVideoFilterEnabled.value,
       shortVideoFilterMinutes: shortVideoFilterMinutes.value,
       jsonpOnlyForCustom: jsonpOnlyForCustom.value,
+      disableTimeouts: disableTimeouts.value,
       displayMode: displayMode.value,
       timestamp: Date.now()
     };
@@ -404,6 +429,7 @@ const loadFromLocalStorage = () => {
       const data = JSON.parse(stored);
       console.log('[SettingsView.vue] Loaded from localStorage:', data);
       if (typeof data.jsonpOnlyForCustom !== 'undefined') jsonpOnlyForCustom.value = !!data.jsonpOnlyForCustom;
+      if (typeof data.disableTimeouts !== 'undefined') disableTimeouts.value = !!data.disableTimeouts;
       return data;
     }
   } catch (e) {

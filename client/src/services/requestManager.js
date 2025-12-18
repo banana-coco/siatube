@@ -1,6 +1,6 @@
 // API 呼び出し管理（フォールバック前に10s待機を追加）
 import { apiurl } from "@/api";
-import { loadCustomEndpointsJsonpOnly } from "@/utils/settingsManager";
+import { loadCustomEndpointsJsonpOnly, loadDisableTimeouts } from "@/utils/settingsManager";
 
 // localStorage keys
 const STORAGE_KEY = "custom_api_endpoints_v1";
@@ -113,27 +113,33 @@ function jsonpRequest(url, timeout = 60000) {
     };
     document.body.appendChild(script);
 
-    setTimeout(() => {
-      if (done) return;
-      done = true;
-      cleanup();
-      reject(new Error("JSONP timeout"));
-    }, timeout);
+    // If timeout is a falsy/zero value, interpret as "no timeout"
+    if (timeout && Number(timeout) > 0) {
+      setTimeout(() => {
+        if (done) return;
+        done = true;
+        cleanup();
+        reject(new Error("JSONP timeout"));
+      }, timeout);
+    }
   });
 }
 
 // fetch リクエスト + ステータス追跡
 async function fetchWithRedirects(url, options = {}, timeout = 60000) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  let timer = null;
+  if (timeout && Number(timeout) > 0) {
+    timer = setTimeout(() => controller.abort(), timeout);
+  }
   const mergedOpts = { ...options, signal: controller.signal, redirect: "follow" };
   let response;
 
   try {
     response = await fetch(url, mergedOpts);
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   } catch (err) {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
     if (err.name === "AbortError") throw new Error("timeout");
     throw err;
   }
@@ -205,10 +211,12 @@ export async function apiRequest(options = {}) {
   const isCustom = loadCustomEndpoints().includes(base);
   let jsonpOnlyForCustom = false;
   try { jsonpOnlyForCustom = !!loadCustomEndpointsJsonpOnly(); } catch {}
+  let disableTimeouts = false;
+  try { disableTimeouts = !!loadDisableTimeouts(); } catch {}
   // ---- カスタム URL: JSONP 優先 ----
   if (isCustom) {
     try {
-      const jsonpData = await jsonpRequest(url, timeout);
+      const jsonpData = await jsonpRequest(url, disableTimeouts ? 0 : timeout);
       const status = jsonpData?.status ?? 200;
 
       if (status >= 400 && status <= 599) {
@@ -240,7 +248,7 @@ export async function apiRequest(options = {}) {
           headers,
           body: body ? JSON.stringify(body) : undefined,
         },
-        timeout
+        disableTimeouts ? 0 : timeout
       );
 
       const { status, data } = res;

@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   DARK_MODE: 'darkMode',
   DISPLAY_MODE: 'displayMode',
   CUSTOM_ENDPOINTS_JSONP_ONLY: 'customEndpointsJsonpOnly',
+  DISABLE_TIMEOUTS: 'disableTimeouts',
 };
 
 const DEFAULTS = {
@@ -205,6 +206,34 @@ export function loadCustomEndpointsJsonpOnly() {
 }
 
 /**
+ * タイムアウトを無効化する設定を保存
+ * @param {boolean} enabled
+ */
+export function saveDisableTimeouts(enabled) {
+  try {
+    safeSetItem(STORAGE_KEYS.DISABLE_TIMEOUTS, !!enabled);
+  } catch (e) {
+    console.error('saveDisableTimeouts error', e);
+  }
+}
+
+/**
+ * タイムアウトを無効化する設定を読み込み
+ * デフォルトは true
+ * @returns {boolean}
+ */
+export function loadDisableTimeouts() {
+  try {
+    const v = safeGetItem(STORAGE_KEYS.DISABLE_TIMEOUTS, null);
+    if (v === null || v === undefined) return true;
+    return !!v;
+  } catch (e) {
+    console.error('loadDisableTimeouts error', e);
+    return true;
+  }
+}
+
+/**
  * displayMode から実際にダークモードかどうかを判定する補助関数
  * @param {string} mode
  * @returns {boolean}
@@ -250,4 +279,6 @@ export default {
   isValidUrl,
   saveCustomEndpointsJsonpOnly,
   loadCustomEndpointsJsonpOnly,
+  saveDisableTimeouts,
+  loadDisableTimeouts,
 };

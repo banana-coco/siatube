@@ -67,13 +67,19 @@ export default {
   },
   methods: {
     rLink(r) {
+      // If the related item itself is a playlist, link to that playlist
       if (r.type === "playlist") {
         return `/watch?v=${r.videoId}&list=${r.replaylistId}`;
-      } else if (this.playlistId) {
-        return `/watch?v=${r.videoId}&list=${this.playlistId}`;
-      } else {
-        return `/watch?v=${r.videoId}`;
       }
+
+      // Only preserve current `list` param when the related video is part
+      // of the same playlist (i.e. r.replaylistId equals current playlistId).
+      if (r.replaylistId && this.playlistId && r.replaylistId === this.playlistId) {
+        return `/watch?v=${r.videoId}&list=${this.playlistId}`;
+      }
+
+      // Otherwise navigate to the video without carrying over the list param.
+      return `/watch?v=${r.videoId}`;
     },
     observeLastItem() {
       if (this.observer) {
