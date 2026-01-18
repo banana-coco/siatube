@@ -34,7 +34,7 @@
           画質:
           <select v-model="selectedQuality" class="selector">
             <option v-for="q in availableQualities" :key="q" :value="q">
-              {{ q.replace('p', '') }}p
+              {{ qualityLabels[q] || q }}
             </option>
           </select>
         </label>
@@ -80,7 +80,7 @@
           画質:
           <select v-model="selectedQuality" class="selector">
             <option v-for="q in availableQualities" :key="q" :value="q">
-              {{ q.replace('p', '') }}p
+              {{ qualityLabels[q] || q }}
             </option>
           </select>
         </label>
@@ -120,6 +120,7 @@ const error = ref("");
 const sources = ref({});
 const selectedQuality = ref("");
 const availableQualities = ref([]);
+const qualityLabels = ref({}); // Map from internal key to display label
 const selectedPlaybackRate = ref(1.0);
 const playbackRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3, 4];
 const diffText = ref("0");
@@ -814,13 +815,26 @@ async function fetchStreamUrl(id) {
 
     // Build sources but keep types distinct: HLS entries have .url, progressive entries have .video/.audio
     const combined = {};
+    const qualityLabels = {}; // Map from internalKey to display label
+    
     allQuals.forEach((q) => {
+      // Add m3u8 source with [quality] label
       if (m3u8srcs[q]) {
         combined[q] = { url: m3u8srcs[q].url, mimeType: m3u8srcs[q].mimeType };
+        qualityLabels[q] = `[${q}]`;
       }
+      // Add progressive source (video+audio)
       if (srcs[q]) {
-        // If both exist, keep both; progressive under .video/.audio, hls under .url
-        combined[q] = Object.assign({}, combined[q] || {}, srcs[q]);
+        // If m3u8 already exists for this quality, use quality2 label
+        if (m3u8srcs[q]) {
+          const key2 = `${q}_2`;
+          combined[key2] = srcs[q];
+          qualityLabels[key2] = `[${q}2]`;
+        } else {
+          // No m3u8, use simple quality label
+          combined[q] = srcs[q];
+          qualityLabels[q] = q;
+        }
       }
     });
 
@@ -830,11 +844,23 @@ async function fetchStreamUrl(id) {
       return;
     }
 
-    // decide default quality
-    const defaultQuality = ["1080p","720p","480p"].find(q => allQuals.includes(q)) || allQuals[0];
+    // decide default quality: prefer m3u8 if available
+    const defaultQuality = ["1080p","720p","480p"].find(q => combined[q] && (m3u8srcs[q] || !srcs[q])) || Object.keys(combined)[0];
 
     sources.value = combined;
-    availableQualities.value = allQuals;
+    
+    // Store quality labels for display
+    qualityLabels.value = qualityLabels;
+    
+    // availableQualities should be internal keys, sorted by label display
+    const internalKeys = Object.keys(combined).sort((a, b) => {
+      const aNum = parseInt(a.replace(/_2$/, ''));
+      const bNum = parseInt(b.replace(/_2$/, ''));
+      if (bNum !== aNum) return bNum - aNum; // sort by resolution desc
+      return a.includes('_2') ? 1 : -1; // sort _2 variants after main
+    });
+    availableQualities.value = internalKeys;
+    
     selectedQuality.value = defaultQuality || Object.keys(combined)[0];
 
     // DOM 更新後のセットアップ
