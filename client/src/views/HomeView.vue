@@ -1,6 +1,27 @@
 <template>
-  <div>
-    <!-- カテゴリ切り替えボタン -->
+  <div class="home-container">
+    <div class="downloader-box">
+      <h1>動画ダウンローダー</h1>
+      <div class="input-group">
+        <input 
+          v-model="videoUrl" 
+          type="text" 
+          placeholder="YouTubeのURLを入力 (例: https://www.youtube.com/watch?v=...) " 
+          @keyup.enter="handleGo"
+        />
+        <button @click="handleGo" :disabled="!isValidUrl">決定</button>
+      </div>
+      <div v-if="extractedVideoId" class="result-section">
+        <div class="player-preview">
+          <StreamPlayer :videoId="extractedVideoId" :streamType="'1'" />
+        </div>
+        <div class="download-section">
+          <StreamType3 :videoId="extractedVideoId" />
+        </div>
+      </div>
+    </div>
+
+    <!-- カテゴリ切り替えボタン (元の機能も維持) -->
     <nav class="category-nav">
       <button
         v-for="cat in categories"
@@ -39,11 +60,15 @@
 
 <script>
 import VideoList from "@/components/VideoList.vue";
+import StreamPlayer from "@/components/StreamPlayer.vue";
+import StreamType3 from "@/components/StreamType3.vue";
 
 export default {
-  components: { VideoList },
+  components: { VideoList, StreamPlayer, StreamType3 },
   data() {
     return {
+      videoUrl: "",
+      extractedVideoId: "",
       trend: {
         trending: [],
         music: [],
@@ -60,6 +85,9 @@ export default {
     };
   },
   computed: {
+    isValidUrl() {
+      return this.videoUrl.includes("v=") || this.videoUrl.includes("youtu.be/");
+    },
     selectedVideos() {
       return this.trend[this.selectedCategory] || [];
     },
@@ -71,10 +99,21 @@ export default {
     },
   },
   created() {
-    document.title = "しあチューブ - ホーム";
+    document.title = "しあチューブ - 動画ダウンローダー";
     this.fetchTrendData();
   },
   methods: {
+    handleGo() {
+      let id = "";
+      if (this.videoUrl.includes("v=")) {
+        id = this.videoUrl.split("v=")[1].split("&")[0];
+      } else if (this.videoUrl.includes("youtu.be/")) {
+        id = this.videoUrl.split("youtu.be/")[1].split("?")[0];
+      }
+      if (id) {
+        this.extractedVideoId = id;
+      }
+    },
     async fetchTrendData() {
       this.loading = true;
       this.error = null;
@@ -94,6 +133,72 @@ export default {
 </script>
 
 <style scoped>
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.downloader-box {
+  background: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.downloader-box h1 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+.input-group {
+  display: flex;
+  gap: 10px;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+}
+.input-group input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+.input-group button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent-color);
+  color: var(--on-accent);
+  font-weight: bold;
+  cursor: pointer;
+}
+.input-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+.player-preview {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.download-section {
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
+}
+
 .Accesscount {
   font-size: 1rem;
   color: var(--text-primary);
@@ -138,7 +243,7 @@ main {
   transition: background-color 0.3s ease;
 }
 .footer {
-  margin-top: 0px;
+  margin-top: 2rem;
   padding: 1rem;
   text-align: center;
   font-size: 0.9rem;
