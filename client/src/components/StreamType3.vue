@@ -1,8 +1,8 @@
 <template>
   <!-- メインボタン -->
-  <button @click="openPopup" class="download-main-btn" style="display: flex;">
-    <span><div style="width: 90%; height: 90%; display: block; fill: currentcolor;"><svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;"><path d="M12 2a1 1 0 00-1 1v11.586l-4.293-4.293a1 1 0 10-1.414 1.414L12 18.414l6.707-6.707a1 1 0 10-1.414-1.414L13 14.586V3a1 1 0 00-1-1Zm7 18H5a1 1 0 000 2h14a1 1 0 000-2Z"></path></svg></div></span>
-    ダウンロード
+  <button @click="openPopup" class="download-main-btn" style="display: flex; margin: 10px auto;">
+    <span><div style="width: 20px; height: 20px; display: block; fill: currentcolor; margin-right: 8px;"><svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;"><path d="M12 2a1 1 0 00-1 1v11.586l-4.293-4.293a1 1 0 10-1.414 1.414L12 18.414l6.707-6.707a1 1 0 10-1.414-1.414L13 14.586V3a1 1 0 00-1-1Zm7 18H5a1 1 0 000 2h14a1 1 0 000-2Z"></path></svg></div></span>
+    形式を選択してダウンロード
   </button>
 
   <!-- ポップアップ -->
